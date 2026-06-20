@@ -158,10 +158,12 @@ function lockButtonForToday() {
   spinButton.innerHTML = "<span>今日</span><span>已抽</span>";
 }
 
+// 同步設定輪盤轉角 + --spin（圖片靠 --spin 反向抵銷，永遠正立）
 function setWheelToPrize(prizeIndex) {
   wheelRotation = normalizeAngle(-prizeIndex * sectorAngle);
   wheelRotator.style.transition = "none";
   wheelRotator.style.transform = `rotate(${wheelRotation}deg)`;
+  wheelRotator.style.setProperty("--spin", `${wheelRotation}deg`);
 }
 
 function spinToPrize(prizeIndex) {
@@ -171,16 +173,26 @@ function spinToPrize(prizeIndex) {
     const delta = (targetAngle - currentAngle + 360) % 360;
     const nextRotation = wheelRotation + SPIN_TURNS * 360 + delta;
 
+    let done = false;
     const handleStop = () => {
+      if (done) return;
+      done = true;
       wheelRotator.removeEventListener("transitionend", handleStop);
       setWheelToPrize(prizeIndex);
       resolve();
     };
 
     wheelRotator.addEventListener("transitionend", handleStop, { once: true });
-    wheelRotator.style.transition = `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.82, 0.18, 1)`;
+    // 先 reflow，確保 transition:none → 有過渡 能生效
+    void wheelRotator.offsetWidth;
+    wheelRotator.style.transition =
+      `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.82, 0.18, 1),` +
+      ` --spin ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.82, 0.18, 1)`;
     wheelRotator.style.transform = `rotate(${nextRotation}deg)`;
+    wheelRotator.style.setProperty("--spin", `${nextRotation}deg`);
     wheelRotation = nextRotation;
+    // 後備：即使 transitionend 沒觸發（部分環境）也能收尾
+    setTimeout(handleStop, SPIN_DURATION_MS + 150);
   });
 }
 
