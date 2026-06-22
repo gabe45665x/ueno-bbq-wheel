@@ -60,6 +60,9 @@ const SPIN_DURATION_MS = 3000;
 const sectorAngle = 360 / PRIZES.length;
 const DAILY_KEY = "uenoSlotDate";
 const PRIZE_KEY = "uenoSlotPrize";
+const HISTORY_KEY = "uenoSlotHistory";
+const CODE_KEY = "uenoSlotCode";
+const PRIZE_VALID_MS = 30 * 24 * 60 * 60 * 1000; // 中獎後有效期：30 天
 
 const spinButton = document.getElementById("spinButton");
 const resultLabel = document.getElementById("resultLabel");
@@ -73,6 +76,8 @@ const bulbRing = document.querySelector("[data-bulb-ring]");
 
 let isSpinning = false;
 let wheelRotation = 0;
+let historyTimer = null;
+let pendingUseIdx = -1;
 
 function todayKey() {
   const d = new Date();
@@ -129,12 +134,133 @@ function buildPrizeDetailModal() {
     `<div class="pd-box"><div class="pd-title">🎁 獎勵詳情</div>` +
     `<button class="pd-close" type="button" aria-label="關閉">×</button>` +
     `<div class="pd-list">${rows}</div>` +
+    `<p class="pd-validity">⏳ 所有獎勵中獎後 30 天內有效，逾期自動失效</p>` +
     `<p class="pd-foot">數量為兩個月限量，送完為止 · 中獎後請截圖傳官方客服核銷</p></div>`;
   document.body.appendChild(modal);
   modal.addEventListener("click", (e) => {
     if (e.target === modal || e.target.classList.contains("pd-close")) modal.classList.remove("open");
   });
   return modal;
+}
+
+// 中獎兌換碼：UENO-當月(YYMM)-獎項碼-亂碼，每筆中獎唯一（避開易混淆字 O0I1）
+function genCode(prize) {
+  const d = new Date();
+  const ym = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, "0");
+  const rankNum = { "crown": "1", "vip-card": "2", "bento": "3", "coupon": "4", "pork-belly": "5" }[prize.id] || "0";
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let rand = "";
+  for (let i = 0; i < 4; i++) rand += chars[Math.floor(Math.random() * chars.length)];
+  return "UENO-" + ym + "-" + rankNum + "-" + rand;
+}
+
+// 抽獎紀錄（存本機 localStorage：日期＋獎項＋兌換碼）
+function recordDraw(prize, code) {
+  try {
+    const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    const d = new Date();
+    const dateStr = d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+    hist.unshift({ date: dateStr, ts: Date.now(), id: prize.id, rank: prize.rank, label: prize.label, asset: prize.asset, code: code || "" });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, 200)));
+  } catch (e) {}
+}
+
+// 倒數顯示：未到期回 "剩 X天 HH:MM:SS"，到期回 null
+function fmtRemain(ms) {
+  if (ms <= 0) return null;
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return "剩 " + d + " 天 " + pad(h) + ":" + pad(m) + ":" + pad(sec);
+}
+
+// 更新所有抽獎紀錄裡的倒數計時（每秒呼叫）
+function tickCountdowns() {
+  const now = Date.now();
+  document.querySelectorAll(".hist-countdown[data-exp]").forEach((el) => {
+    const txt = fmtRemain(Number(el.dataset.exp) - now);
+    if (txt === null) { el.textContent = "已失效"; el.classList.add("expired"); }
+    else { el.textContent = txt; el.classList.remove("expired"); }
+  });
+}
+
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  if (!list) return;
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch (e) {}
+  if (!hist.length) {
+    list.innerHTML = '<p class="hist-empty">尚無抽獎紀錄<br><small>抽過獎後就會記在這裡</small></p>';
+    return;
+  }
+  list.innerHTML = hist.map((h, idx) => {
+    const isWin = h.id !== "ember-grill";
+    const prizeTxt = isWin ? (h.rank + " · " + h.label) : "未中獎";
+    const codeLine = (isWin && h.code) ? `<span class="hist-code">兌換碼 ${h.code}</span>` : "";
+    const expired = isWin && h.ts && (Date.now() > h.ts + PRIZE_VALID_MS);
+    const cdLine = (isWin && h.ts && !h.used) ? `<span class="hist-countdown" data-exp="${h.ts + PRIZE_VALID_MS}"></span>` : "";
+    const usedLine = (isWin && h.used && h.usedAt) ? `<span class="hist-used-time">已於 ${tsToDate(h.usedAt)} 使用</span>` : "";
+    let action = "";
+    if (isWin) {
+      if (h.used) action = '<span class="hist-used">✓ 已使用</span>';
+      else if (!expired) action = `<button class="hist-use-btn" type="button" data-idx="${idx}">使用</button>`;
+    }
+    return `<div class="hist-item${h.used ? " is-used" : ""}"><img src="${h.asset}" alt="">` +
+      `<div class="hist-info"><span class="hist-date">${h.date}</span>` +
+      `<span class="hist-prize${isWin ? "" : " is-miss"}">${prizeTxt}</span>${codeLine}${cdLine}${usedLine}</div>` +
+      (action ? `<div class="hist-action">${action}</div>` : "") +
+      `</div>`;
+  }).join("");
+  tickCountdowns();
+}
+
+function buildHistoryModal() {
+  const modal = document.createElement("div");
+  modal.id = "historyModal";
+  modal.className = "prize-detail";
+  modal.innerHTML =
+    '<div class="pd-box"><div class="pd-title">📜 抽獎紀錄</div>' +
+    '<button class="pd-close" type="button" aria-label="關閉">×</button>' +
+    '<div class="pd-list" id="historyList"></div></div>';
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal || e.target.classList.contains("pd-close")) {
+      modal.classList.remove("open");
+      if (historyTimer) { clearInterval(historyTimer); historyTimer = null; }
+    }
+  });
+  return modal;
+}
+
+function tsToDate(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+}
+
+// 標記某筆紀錄為「已使用」（本機）
+function markUsed(idx) {
+  try {
+    const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    if (hist[idx] && !hist[idx].used) {
+      hist[idx].used = true;
+      hist[idx].usedAt = Date.now();
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+    }
+  } catch (e) {}
+}
+
+// 「確定要使用？」確認對話框
+function buildConfirmDialog() {
+  const dlg = document.createElement("div");
+  dlg.id = "confirmDialog";
+  dlg.className = "confirm-dialog";
+  dlg.innerHTML =
+    '<div class="cd-box"><p class="cd-msg">確定要使用？</p>' +
+    '<p class="cd-sub"></p>' +
+    '<div class="cd-actions"><button class="cd-cancel" type="button">取消</button>' +
+    '<button class="cd-ok" type="button">確定</button></div></div>';
+  document.body.appendChild(dlg);
+  return dlg;
 }
 
 function buildWheel() {
@@ -188,15 +314,22 @@ function applyResult(prize, fromSpin) {
   resultDetail.textContent = prize.reward;
   resultIcon.src = prize.asset;
   resultIcon.alt = prize.label;
+  const isWin = prize.id !== "ember-grill";
+  let code = "";
+  if (isWin) {
+    if (fromSpin) { code = genCode(prize); localStorage.setItem(CODE_KEY, code); }
+    else { code = localStorage.getItem(CODE_KEY) || ""; }
+  }
   if (resultCS) {
-    resultCS.textContent = prize.id === "ember-grill"
-      ? ""
-      : "📸 請截圖此畫面傳給官方客服核銷您的獎品";
+    resultCS.innerHTML = !isWin ? "" :
+      '兌換碼<br><span class="redeem-code">' + code + '</span><br>' +
+      '<small>📸 請截圖此畫面（含兌換碼）傳給官方客服核銷 · 中獎後 30 天內有效</small>';
   }
   setActivePrize(prize.id);
   if (fromSpin) {
     localStorage.setItem(DAILY_KEY, todayKey());
     localStorage.setItem(PRIZE_KEY, prize.id);
+    recordDraw(prize, code);
   }
 }
 
@@ -270,6 +403,29 @@ buildBulbs();
 // 獎勵詳情視窗 + 觸發按鈕
 const prizeDetailModal = buildPrizeDetailModal();
 { const _b = document.getElementById("prizeDetailBtn"); if (_b) _b.addEventListener("click", () => prizeDetailModal.classList.add("open")); }
+const historyModal = buildHistoryModal();
+{ const _h = document.getElementById("historyBtn"); if (_h) _h.addEventListener("click", () => { renderHistory(); historyModal.classList.add("open"); if (historyTimer) clearInterval(historyTimer); historyTimer = setInterval(tickCountdowns, 1000); }); }
+
+// 「使用」按鈕 → 確認對話框
+const confirmDialog = buildConfirmDialog();
+historyModal.addEventListener("click", (e) => {
+  const btn = e.target.closest(".hist-use-btn");
+  if (!btn) return;
+  e.stopPropagation();
+  pendingUseIdx = Number(btn.dataset.idx);
+  let name = "";
+  try { const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); const h = hist[pendingUseIdx]; if (h) name = h.rank + " · " + h.label; } catch (e2) {}
+  confirmDialog.querySelector(".cd-sub").textContent = (name ? name + "　" : "") + "使用後無法復原";
+  confirmDialog.classList.add("open");
+});
+confirmDialog.querySelector(".cd-cancel").addEventListener("click", () => { confirmDialog.classList.remove("open"); pendingUseIdx = -1; });
+confirmDialog.addEventListener("click", (e) => { if (e.target === confirmDialog) { confirmDialog.classList.remove("open"); pendingUseIdx = -1; } });
+confirmDialog.querySelector(".cd-ok").addEventListener("click", () => {
+  if (pendingUseIdx >= 0) markUsed(pendingUseIdx);
+  pendingUseIdx = -1;
+  confirmDialog.classList.remove("open");
+  renderHistory();
+});
 
 // 初始：若今日已抽過 → 轉到該獎項並恢復結果、鎖定；否則待機
 const storedPrizeId = hasSpunToday() ? localStorage.getItem(PRIZE_KEY) : null;

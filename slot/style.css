@@ -582,3 +582,56 @@ button {
 .prize-detail .pd-bar { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
 .prize-detail .pd-bar > i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #e0a64e, #ffd98a); }
 .prize-detail .pd-foot { margin: 14px 2px 2px; font-size: 11.5px; color: #9c8059; text-align: center; line-height: 1.5; }
+
+/* 兩顆按鈕並排（獎勵詳情 / 抽獎紀錄）*/
+.detail-row { display: flex; gap: 10px; margin: 2px 0 18px; }
+.detail-row .detail-btn { margin: 0; flex: 1; }
+
+/* 抽獎紀錄清單 */
+.hist-item { display: flex; gap: 12px; align-items: center; padding: 11px 4px; border-bottom: 1px solid rgba(255, 201, 112, 0.13); }
+.hist-item:last-child { border-bottom: none; }
+.hist-item > img { width: 44px; height: 44px; flex: 0 0 44px; object-fit: contain; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5)); }
+.hist-info { display: flex; flex-direction: column; gap: 2px; }
+.hist-date { font-size: 13px; color: #caa97e; }
+.hist-prize { font-size: 16px; font-weight: 800; color: var(--gold-light); }
+.hist-prize.is-miss { color: #9c8059; font-weight: 600; }
+.hist-empty { text-align: center; color: #9c8059; font-size: 15px; padding: 34px 0; line-height: 1.9; }
+
+/* 中獎兌換碼 */
+.redeem-code {
+  display: inline-block; margin: 4px 0; padding: 5px 14px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 21px; font-weight: 800; letter-spacing: 2px;
+  color: #fff3dd; background: rgba(0, 0, 0, 0.35);
+  border: 1px dashed rgba(255, 201, 112, 0.65); border-radius: 9px;
+}
+.draw-status__cs small { display: inline-block; margin-top: 7px; font-size: 12.5px; font-weight: 600; opacity: 0.92; }
+.hist-code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #caa97e; letter-spacing: 1px; margin-top: 1px; }
+.hist-countdown { font-size: 12px; color: #6fcf97; letter-spacing: 0.5px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.hist-countdown.expired { color: #ff7a5a; font-weight: 800; letter-spacing: 1px; }
+.prize-detail .pd-validity { margin: 16px 2px 2px; font-size: 13.5px; font-weight: 800; color: #ffce5e; text-align: center; letter-spacing: 0.5px; }
+
+/* 使用按鈕 / 已使用 */
+.hist-action { margin-left: auto; flex: 0 0 auto; padding-left: 8px; }
+.hist-use-btn {
+  padding: 8px 18px; border: none; border-radius: 11px;
+  background: linear-gradient(180deg, #ffd98a, #e0a64e); color: #3a1c08;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px; cursor: pointer;
+  box-shadow: 0 3px 0 #8a5a1e; -webkit-tap-highlight-color: transparent;
+}
+.hist-use-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #8a5a1e; }
+.hist-used { font-size: 13px; font-weight: 800; color: #6fcf97; white-space: nowrap; }
+.hist-item.is-used { opacity: 0.6; }
+.hist-used-time { font-size: 11px; color: #9c8059; margin-top: 1px; }
+
+/* 確定要使用？對話框 */
+.confirm-dialog { position: fixed; inset: 0; z-index: 400; display: none; align-items: center; justify-content: center; background: rgba(8, 4, 3, 0.78); padding: 24px; box-sizing: border-box; }
+.confirm-dialog.open { display: flex; }
+.confirm-dialog .cd-box { width: 100%; max-width: 360px; background: linear-gradient(180deg, #26140d, #160a07); border: 1.5px solid rgba(255, 201, 112, 0.5); border-radius: 18px; padding: 28px 22px 20px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); }
+.confirm-dialog .cd-msg { margin: 0 0 8px; font-size: 23px; font-weight: 900; color: #ffce5e; letter-spacing: 2px; }
+.confirm-dialog .cd-sub { margin: 0 0 22px; font-size: 14px; color: #e8d4b4; line-height: 1.5; }
+.confirm-dialog .cd-sub:empty { display: none; }
+.confirm-dialog .cd-actions { display: flex; gap: 12px; }
+.confirm-dialog .cd-actions button { flex: 1; padding: 13px; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; letter-spacing: 2px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.confirm-dialog .cd-cancel { background: rgba(255, 255, 255, 0.12); color: #e8d4b4; }
+.confirm-dialog .cd-ok { background: linear-gradient(180deg, #ffd98a, #e0a64e); color: #3a1c08; box-shadow: 0 4px 0 #8a5a1e; }
+.confirm-dialog .cd-ok:active { transform: translateY(2px); box-shadow: 0 2px 0 #8a5a1e; }
