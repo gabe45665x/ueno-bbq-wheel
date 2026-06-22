@@ -2,46 +2,57 @@ const PRIZES = [
   {
     id: "crown", rank: "一獎", label: "皇冠禮",
     result: "恭喜抽中一獎  皇冠禮",
-    reward: "平日每天可兌換 100 元便當共 5 個（限內用並留下每日用餐評論）",
+    reward: "平日每天可兌換一個 110 元便當共 5 個（限內用並留下每日用餐評論）",
     note: "最高獎項",
-    asset: "./assets/prizes/crown.png", weight: 2, wheelScale: 0.95
+    asset: "./assets/prizes/crown.png", weight: 3, wheelScale: 0.95
   },
   {
     id: "vip-card", rank: "二獎", label: "VIP 卡",
     result: "恭喜抽中二獎  VIP 卡",
-    reward: "平日每天可兌換 100 元便當共 3 個（限內用並留下每日用餐評論）",
+    reward: "平日每天可兌換一個 110 元便當共 3 個（限內用並留下每日用餐評論）",
     note: "會員資格",
-    asset: "./assets/prizes/vip-card.png", weight: 3, wheelScale: 1.1
+    asset: "./assets/prizes/vip-card.png", weight: 5, wheelScale: 1.1
   },
   {
     id: "bento", rank: "三獎", label: "豪華便當",
     result: "恭喜抽中三獎  豪華便當",
     reward: "本次用餐升級雙主餐 + 加碼炭烤肋排",
     note: "人氣主餐",
-    asset: "./assets/prizes/bento.png", weight: 4, wheelScale: 1.08
+    asset: "./assets/prizes/bento.png", weight: 50, wheelScale: 1.08
   },
   {
     id: "coupon", rank: "四獎", label: "折價券",
     result: "恭喜抽中四獎  折價券",
-    reward: "10 元折價券，下次來店現場折抵",
+    reward: "15 元折價券，下次來店現場折抵",
     note: "下次折抵",
-    asset: "./assets/prizes/coupon.png", weight: 5, wheelScale: 1.18
+    asset: "./assets/prizes/coupon.png", weight: 100, wheelScale: 1.18
   },
   {
     id: "pork-belly", rank: "五獎", label: "五花肉",
     result: "恭喜抽中五獎  加菜五花肉",
-    reward: "當月壽星可享加贈五花烤肉片一片（限當月使用）",
+    reward: "當月壽星可享加贈五花烤肉片一份（限當月使用）",
     note: "加菜獎",
-    asset: "./assets/prizes/pork-belly.png", weight: 6, wheelScale: 1.02
+    asset: "./assets/prizes/pork-belly.png", weight: 100, wheelScale: 1.02
   },
   {
     id: "ember-grill", rank: "未中獎", label: "熄火炭爐",
     result: "本次未中獎",
     reward: "很可惜，這次沒中獎。明天再來試試手氣！",
     note: "明日再試一次",
-    asset: "./assets/prizes/ember-grill.png", weight: 14, wheelScale: 1.02
+    asset: "./assets/prizes/ember-grill.png", weight: 500, wheelScale: 1.02
   }
 ];
+
+// ===== 店家手動維護：各獎「兩個月限量／剩餘」=====
+// 發完獎就把對應的 left 改小，再推上線即可。
+// （此版無後端，是手動快照：所有客人看到的都是這裡的數字，不會自動扣。）
+const PRIZE_STOCK = {
+  "crown":      { quota: 3,   left: 3 },
+  "vip-card":   { quota: 5,   left: 5 },
+  "bento":      { quota: 50,  left: 50 },
+  "coupon":     { quota: 100, left: 100 },
+  "pork-belly": { quota: 100, left: 100 }
+};
 
 const BULB_COUNT = 18;
 const SPIN_TURNS = 6;
@@ -78,6 +89,10 @@ function buildPrizeCards() {
     const article = document.createElement("article");
     article.className = "prize-card";
     article.dataset.prizeId = prize.id;
+    const _st = PRIZE_STOCK[prize.id];
+    const _stockLine = _st
+      ? `<p class="prize-card__stock${_st.left === 0 ? " is-out" : ""}">${_st.left === 0 ? "已送完" : "剩餘 " + _st.left + " / " + _st.quota}</p>`
+      : "";
     article.innerHTML = `
       <div class="prize-card__rank">${prize.rank}</div>
       <div class="prize-card__icon">
@@ -85,9 +100,41 @@ function buildPrizeCards() {
       </div>
       <p class="prize-card__name">${prize.label}</p>
       <p class="prize-card__note">${prize.note}</p>
+      ${_stockLine}
     `;
     prizeCards.appendChild(article);
   }
+}
+
+// 獎勵詳情視窗：列出每個獎的圖、獎項、完整獎勵文字、限量／剩餘
+function buildPrizeDetailModal() {
+  const modal = document.createElement("div");
+  modal.id = "prizeDetailModal";
+  modal.className = "prize-detail";
+  const rows = PRIZES.filter((p) => p.id !== "ember-grill").map((p) => {
+    const st = PRIZE_STOCK[p.id];
+    let stockHtml = "";
+    if (st) {
+      const pct = Math.max(0, Math.min(100, st.quota ? (st.left / st.quota) * 100 : 0));
+      const leftTxt = st.left === 0 ? "已送完" : "剩餘 " + st.left;
+      stockHtml =
+        `<div class="pd-stock"><span>限量 ${st.quota}</span><span class="pd-left${st.left === 0 ? " is-out" : ""}">${leftTxt}</span></div>` +
+        `<div class="pd-bar"><i style="width:${pct}%"></i></div>`;
+    }
+    return `<div class="pd-item"><img src="${p.asset}" alt="${p.label}">` +
+      `<div class="pd-info"><div class="pd-head"><span class="pd-rank">${p.rank}</span><b>${p.label}</b></div>` +
+      `<p class="pd-reward">${p.reward}</p>${stockHtml}</div></div>`;
+  }).join("");
+  modal.innerHTML =
+    `<div class="pd-box"><div class="pd-title">🎁 獎勵詳情</div>` +
+    `<button class="pd-close" type="button" aria-label="關閉">×</button>` +
+    `<div class="pd-list">${rows}</div>` +
+    `<p class="pd-foot">數量為兩個月限量，送完為止 · 中獎後請截圖傳官方客服核銷</p></div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal || e.target.classList.contains("pd-close")) modal.classList.remove("open");
+  });
+  return modal;
 }
 
 function buildWheel() {
@@ -219,6 +266,10 @@ async function startSpin() {
 buildPrizeCards();
 buildWheel();
 buildBulbs();
+
+// 獎勵詳情視窗 + 觸發按鈕
+const prizeDetailModal = buildPrizeDetailModal();
+{ const _b = document.getElementById("prizeDetailBtn"); if (_b) _b.addEventListener("click", () => prizeDetailModal.classList.add("open")); }
 
 // 初始：若今日已抽過 → 轉到該獎項並恢復結果、鎖定；否則待機
 const storedPrizeId = hasSpunToday() ? localStorage.getItem(PRIZE_KEY) : null;

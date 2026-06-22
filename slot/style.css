@@ -523,3 +523,62 @@ button {
   display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent;
 }
 .mute-btn:active { transform: scale(0.92); }
+
+/* === 獎勵詳情 + 剩餘數量 === */
+.prize-card__stock { margin: 4px 0 0; font-size: 11px; font-weight: 800; color: var(--gold-light); letter-spacing: 0.5px; }
+.prize-card__stock.is-out { color: #ff7a5a; }
+
+.detail-btn {
+  display: block; width: 100%; margin: 2px 0 18px; padding: 14px;
+  border: 1.5px solid rgba(255, 201, 112, 0.55); border-radius: 14px;
+  background: linear-gradient(180deg, rgba(64, 32, 16, 0.92), rgba(34, 17, 9, 0.92));
+  color: var(--gold-light); font-size: 16px; font-weight: 800; letter-spacing: 2px;
+  cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); -webkit-tap-highlight-color: transparent;
+}
+.detail-btn:active { transform: translateY(1px); }
+
+.prize-detail {
+  position: fixed; inset: 0; z-index: 300; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(8, 4, 3, 0.82); padding: 16px; box-sizing: border-box;
+}
+.prize-detail.open { display: flex; }
+.prize-detail .pd-box {
+  position: relative; width: 100%; max-width: 520px; max-height: 86vh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(180deg, #26140d, #160a07);
+  border: 1.5px solid rgba(255, 201, 112, 0.5); border-radius: 20px;
+  padding: 22px 16px 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.prize-detail .pd-title {
+  font-size: 24px; font-weight: 900; color: var(--gold-light); text-align: center;
+  letter-spacing: 3px; margin: 0 0 14px; text-shadow: 0 2px 0 #5a1c0a;
+}
+.prize-detail .pd-close {
+  position: absolute; top: 12px; right: 14px; width: 34px; height: 34px;
+  border: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1);
+  color: var(--gold-light); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.prize-detail .pd-item {
+  display: flex; gap: 12px; align-items: center;
+  padding: 12px 4px; border-bottom: 1px solid rgba(255, 201, 112, 0.13);
+}
+.prize-detail .pd-item:last-child { border-bottom: none; }
+.prize-detail .pd-item > img {
+  width: 56px; height: 56px; flex: 0 0 56px; object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+.prize-detail .pd-info { flex: 1; min-width: 0; }
+.prize-detail .pd-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.prize-detail .pd-rank {
+  font-size: 12px; font-weight: 800; color: #3a1c08;
+  background: linear-gradient(180deg, #ffd98a, #e0a64e); padding: 2px 8px; border-radius: 8px;
+}
+.prize-detail .pd-head b { font-size: 17px; color: #fff3dd; }
+.prize-detail .pd-reward { font-size: 13px; line-height: 1.5; color: #e8d4b4; margin: 0 0 7px; }
+.prize-detail .pd-stock { display: flex; justify-content: space-between; font-size: 12.5px; color: #caa97e; margin-bottom: 4px; }
+.prize-detail .pd-left { font-weight: 800; color: var(--gold-light); }
+.prize-detail .pd-left.is-out { color: #ff7a5a; }
+.prize-detail .pd-bar { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.prize-detail .pd-bar > i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #e0a64e, #ffd98a); }
+.prize-detail .pd-foot { margin: 14px 2px 2px; font-size: 11.5px; color: #9c8059; text-align: center; line-height: 1.5; }
