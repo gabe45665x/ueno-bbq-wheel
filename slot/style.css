@@ -241,7 +241,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0;
-  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-100%) rotate(calc(-1 * (var(--angle) + var(--spin, 0deg))));
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-110%) rotate(calc(-1 * (var(--angle) + var(--spin, 0deg))));
 }
 
 .wheel-prize img {
@@ -255,13 +255,13 @@ button {
 }
 
 .wheel-prize__label {
-  margin-top: -3px;
+  margin-top: -12px;
   font-weight: 800;
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1;
   color: var(--gold-light);
   white-space: nowrap;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 7px rgba(150, 50, 12, 0.6);
   pointer-events: none;
 }
@@ -414,16 +414,19 @@ button {
 
 .prize-grid__cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin-top: 14px;
 }
 
 .prize-card {
-  min-height: 128px;
-  padding: 10px 9px 11px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 92px;
+  padding: 12px 13px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
   background:
     linear-gradient(180deg, rgba(35, 16, 10, 0.97), rgba(11, 6, 5, 0.98));
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
@@ -432,46 +435,58 @@ button {
 .prize-card.is-active {
   border-color: rgba(255, 225, 156, 0.7);
   background:
-    radial-gradient(circle at top, rgba(171, 46, 28, 0.28), transparent 40%),
+    radial-gradient(circle at left, rgba(171, 46, 28, 0.28), transparent 55%),
     linear-gradient(180deg, rgba(45, 19, 12, 0.98), rgba(10, 6, 5, 1));
   transform: translateY(-2px);
 }
 
-.prize-card__rank {
-  display: inline-flex;
-  margin-bottom: 8px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  color: var(--gold-light);
-  background: rgba(255, 226, 160, 0.1);
-  font-size: 11px;
-}
-
 .prize-card__icon {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 58px;
-  margin-bottom: 10px;
+  width: 64px;
+  height: 64px;
 }
 
 .prize-card__icon img {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
+}
+
+.prize-card__body {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.prize-card__rank {
+  align-self: flex-start;
+  margin-bottom: 5px;
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 210, 140, 0.38);
+  border-radius: 999px;
+  color: var(--gold-light);
+  background: rgba(255, 226, 160, 0.08);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .prize-card__name {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.2;
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.2px;
 }
 
 .prize-card__note {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.3;
+  font-size: 11px;
+  line-height: 1.25;
 }
 
 @media (max-width: 380px) {
@@ -497,12 +512,23 @@ button {
   }
 
   .prize-grid__cards {
-    gap: 8px;
+    gap: 9px;
   }
 
   .prize-card {
-    min-height: 122px;
-    padding-inline: 8px;
+    min-height: 82px;
+    gap: 9px;
+    padding: 10px 11px;
+  }
+
+  .prize-card__icon,
+  .prize-card__icon img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .prize-card__name {
+    font-size: 13.5px;
   }
 }
 

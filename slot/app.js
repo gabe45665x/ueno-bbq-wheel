@@ -1,44 +1,44 @@
 const PRIZES = [
   {
-    id: "crown", rank: "一獎", label: "皇冠禮", wheelLabel: "霸主餐",
-    result: "恭喜抽中一獎  皇冠禮",
+    id: "crown", rank: "一獎", label: "霸王餐券", wheelLabel: "霸主餐",
+    result: "恭喜抽中一獎  霸王餐券",
     reward: "平日每天可兌換一個 110 元便當共 5 個（限內用並留下每日用餐評論）",
-    note: "最高獎項",
+    note: "5日豪華便當通行證",
     asset: "./assets/prizes/crown.png", weight: 3, wheelScale: 1.05
   },
   {
-    id: "vip-card", rank: "二獎", label: "VIP 卡", wheelLabel: "招待券",
-    result: "恭喜抽中二獎  VIP 卡",
+    id: "vip-card", rank: "二獎", label: "便當招待券", wheelLabel: "招待券",
+    result: "恭喜抽中二獎  便當招待券",
     reward: "平日每天可兌換一個 110 元便當共 3 個（限內用並留下每日用餐評論）",
-    note: "會員資格",
+    note: "3日美味補給",
     asset: "./assets/prizes/vip-card.png", weight: 5, wheelScale: 1.05
   },
   {
-    id: "bento", rank: "三獎", label: "豪華便當", wheelLabel: "雙主餐",
-    result: "恭喜抽中三獎  豪華便當",
+    id: "bento", rank: "三獎", label: "雙主餐升級券", wheelLabel: "雙主餐",
+    result: "恭喜抽中三獎  雙主餐升級券",
     reward: "本次用餐升級雙主餐 + 加碼炭烤肋排",
-    note: "人氣主餐",
-    asset: "./assets/prizes/bento.png?v=2", weight: 50, wheelScale: 1.12
+    note: "加贈炭烤肋排",
+    asset: "./assets/prizes/bento.png?v=3", weight: 50, wheelScale: 0.7
   },
   {
-    id: "coupon", rank: "四獎", label: "折價券", wheelLabel: "折15元",
-    result: "恭喜抽中四獎  折價券",
+    id: "coupon", rank: "四獎", label: "15元折抵券", wheelLabel: "折15元",
+    result: "恭喜抽中四獎  15元折抵券",
     reward: "15 元折價券，下次來店現場折抵",
-    note: "下次折抵",
+    note: "下次來店可使用",
     asset: "./assets/prizes/coupon.png", weight: 100, wheelScale: 0.92
   },
   {
-    id: "pork-belly", rank: "五獎", label: "五花肉", wheelLabel: "壽星加肉",
-    result: "恭喜抽中五獎  加菜五花肉",
+    id: "pork-belly", rank: "五獎", label: "壽星加肉券", wheelLabel: "壽星加肉",
+    result: "恭喜抽中五獎  壽星加肉券",
     reward: "當月壽星可享加贈五花烤肉片一份（限當月使用）",
-    note: "加菜獎",
+    note: "當月壽星加贈五花肉",
     asset: "./assets/prizes/pork-belly.png", weight: 100, wheelScale: 1.0
   },
   {
-    id: "ember-grill", rank: "未中獎", label: "熄火炭爐", wheelLabel: "殘念",
+    id: "ember-grill", rank: "再接再厲", label: "明天再烤一局", wheelLabel: "殘念",
     result: "本次未中獎",
-    reward: "很可惜，這次沒中獎。明天再來試試手氣！",
-    note: "明日再試一次",
+    reward: "這次先差一點，明天再來開烤試手氣！",
+    note: "明天再試一次",
     asset: "./assets/prizes/ember-grill.png", weight: 500, wheelScale: 1.0
   }
 ];
@@ -99,13 +99,15 @@ function buildPrizeCards() {
       ? `<p class="prize-card__stock${_st.left === 0 ? " is-out" : ""}">${_st.left === 0 ? "已送完" : "剩餘 " + _st.left + " / " + _st.quota}</p>`
       : "";
     article.innerHTML = `
-      <div class="prize-card__rank">${prize.rank}</div>
       <div class="prize-card__icon">
         <img src="${prize.asset}" alt="${prize.label}" />
       </div>
-      <p class="prize-card__name">${prize.label}</p>
-      <p class="prize-card__note">${prize.note}</p>
-      ${_stockLine}
+      <div class="prize-card__body">
+        <span class="prize-card__rank">${prize.rank}</span>
+        <p class="prize-card__name">${prize.label}</p>
+        <p class="prize-card__note">${prize.note}</p>
+        ${_stockLine}
+      </div>
     `;
     prizeCards.appendChild(article);
   }
