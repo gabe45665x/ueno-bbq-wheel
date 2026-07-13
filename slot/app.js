@@ -39,7 +39,7 @@ const PRIZES = [
     result: "本次未中獎",
     reward: "這次先差一點，明天再來開烤試手氣！",
     note: "明天再試一次",
-    asset: "./assets/prizes/ember-grill.png", weight: 500, wheelScale: 1.0
+    asset: "./assets/prizes/ember-grill.png", weight: 1892, wheelScale: 1.0
   }
 ];
 
