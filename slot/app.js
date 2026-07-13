@@ -88,6 +88,13 @@ function hasSpunToday() {
   return localStorage.getItem(DAILY_KEY) === todayKey();
 }
 
+// HTML 逸出：凡是來自 localStorage 的字串進 innerHTML 前都要過這關（防自身型 XSS）
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
 function buildPrizeCards() {
   prizeCards.innerHTML = "";
   for (const prize of PRIZES) {
@@ -197,18 +204,18 @@ function renderHistory() {
   }
   list.innerHTML = hist.map((h, idx) => {
     const isWin = h.id !== "ember-grill";
-    const prizeTxt = isWin ? (h.rank + " · " + h.label) : "未中獎";
-    const codeLine = (isWin && h.code) ? `<span class="hist-code">兌換碼 ${h.code}</span>` : "";
+    const prizeTxt = isWin ? esc(h.rank + " · " + h.label) : "未中獎";
+    const codeLine = (isWin && h.code) ? `<span class="hist-code">兌換碼 ${esc(h.code)}</span>` : "";
     const expired = isWin && h.ts && (Date.now() > h.ts + PRIZE_VALID_MS);
-    const cdLine = (isWin && h.ts && !h.used) ? `<span class="hist-countdown" data-exp="${h.ts + PRIZE_VALID_MS}"></span>` : "";
-    const usedLine = (isWin && h.used && h.usedAt) ? `<span class="hist-used-time">已於 ${tsToDate(h.usedAt)} 使用</span>` : "";
+    const cdLine = (isWin && h.ts && !h.used) ? `<span class="hist-countdown" data-exp="${Number(h.ts) + PRIZE_VALID_MS}"></span>` : "";
+    const usedLine = (isWin && h.used && h.usedAt) ? `<span class="hist-used-time">已於 ${esc(tsToDate(h.usedAt))} 使用</span>` : "";
     let action = "";
     if (isWin) {
       if (h.used) action = '<span class="hist-used">✓ 已使用</span>';
       else if (!expired) action = `<button class="hist-use-btn" type="button" data-idx="${idx}">使用</button>`;
     }
-    return `<div class="hist-item${h.used ? " is-used" : ""}"><img src="${h.asset}" alt="">` +
-      `<div class="hist-info"><span class="hist-date">${h.date}</span>` +
+    return `<div class="hist-item${h.used ? " is-used" : ""}"><img src="${esc(h.asset)}" alt="">` +
+      `<div class="hist-info"><span class="hist-date">${esc(h.date)}</span>` +
       `<span class="hist-prize${isWin ? "" : " is-miss"}">${prizeTxt}</span>${codeLine}${cdLine}${usedLine}</div>` +
       (action ? `<div class="hist-action">${action}</div>` : "") +
       `</div>`;
@@ -291,13 +298,18 @@ function buildBulbs() {
 }
 
 function weightedPick() {
-  const total = PRIZES.reduce((sum, prize) => sum + prize.weight, 0);
+  // 排除已送完（left=0）的獎；未中獎(ember-grill)無庫存設定，一律納入，池永不為空
+  const pool = PRIZES.filter((prize) => {
+    const st = PRIZE_STOCK[prize.id];
+    return !st || st.left > 0;
+  });
+  const total = pool.reduce((sum, prize) => sum + prize.weight, 0);
   let roll = Math.random() * total;
-  for (const prize of PRIZES) {
+  for (const prize of pool) {
     roll -= prize.weight;
     if (roll <= 0) return prize;
   }
-  return PRIZES[PRIZES.length - 1];
+  return pool[pool.length - 1];
 }
 
 function normalizeAngle(degrees) {
@@ -325,7 +337,7 @@ function applyResult(prize, fromSpin) {
   }
   if (resultCS) {
     resultCS.innerHTML = !isWin ? "" :
-      '兌換碼<br><span class="redeem-code">' + code + '</span><br>' +
+      '兌換碼<br><span class="redeem-code">' + esc(code) + '</span><br>' +
       '<small>📸 請截圖此畫面（含兌換碼）傳給官方客服核銷 · 中獎後 30 天內有效</small>';
   }
   setActivePrize(prize.id);
